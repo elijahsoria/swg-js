@@ -130,4 +130,8 @@ describe('api_messages', () => {
           .to.be.true;
     });
   });
+<<<<<<< HEAD
 });
+=======
+});
+>>>>>>> 37f84a4c0a4e3e3edf18a0c8eb987e0e2078e88d
