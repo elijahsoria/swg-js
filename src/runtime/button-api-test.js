@@ -15,7 +15,7 @@
  */
 
 import {ActivityPort} from 'web-activities/activity-ports';
-import {ButtonApi} from './button-api';
+import {ButtonApi, BUTTON_IMPRESSION_EVENT, PAYWALL_IMPRESSION_EVENT, OFFERS_IMPRESSION_EVENT} from './button-api';
 import {ClientEventManager} from './client-event-manager';
 import {ConfiguredRuntime} from './runtime';
 import {PageConfig} from '../model/page-config';
@@ -36,7 +36,7 @@ describes.realWin('ButtonApi', {}, env => {
   let config;
   let analyticsMock;
   let activitiesMock;
-  let logEventStub;
+  let eventManagerMock;
   let buttonApi;
   let handler;
 
@@ -44,7 +44,7 @@ describes.realWin('ButtonApi', {}, env => {
     win = env.win;
     doc = env.win.document;
     eventManager = new ClientEventManager(Promise.resolve());
-    logEventStub = sandbox.stub(eventManager, "logEvent");
+    eventManagerMock = sandbox.mock(eventManager);
     buttonApi = new ButtonApi(resolveDoc(doc), eventManager);
     pageConfig = new PageConfig('pub1:label1', false);
     config = defaultConfig();
@@ -58,6 +58,7 @@ describes.realWin('ButtonApi', {}, env => {
   afterEach(() => {
     activitiesMock.verify();
     analyticsMock.verify();
+    eventManagerMock.verify();
   });
 
   it('should inject stylesheet', () => {
@@ -78,6 +79,7 @@ describes.realWin('ButtonApi', {}, env => {
   });
 
   it('should create button w/o options', () => {
+    eventManagerMock.expects('logEvent').withExactArgs(BUTTON_IMPRESSION_EVENT).once();
     const button = buttonApi.create(handler);
     expect(button.nodeType).to.equal(1);
     expect(button.tagName).to.equal('BUTTON');
@@ -92,6 +94,7 @@ describes.realWin('ButtonApi', {}, env => {
   });
 
   it('should attach button w/o options', () => {
+    eventManagerMock.expects('logEvent').withExactArgs(BUTTON_IMPRESSION_EVENT).once();
     const button = doc.createElement('button');
     button.className = 'button1';
     buttonApi.attach(button, handler);
@@ -105,6 +108,7 @@ describes.realWin('ButtonApi', {}, env => {
   });
 
   it('should create button with empty options', () => {
+    eventManagerMock.expects('logEvent').withExactArgs(BUTTON_IMPRESSION_EVENT).once();
     const button = buttonApi.create({}, handler);
     expect(button).to.have.class('swg-button-light');
     expect(button.getAttribute('role')).to.equal('button');
@@ -116,6 +120,7 @@ describes.realWin('ButtonApi', {}, env => {
   });
 
   it('should create button with options', () => {
+    eventManagerMock.expects('logEvent').withExactArgs(BUTTON_IMPRESSION_EVENT).once();
     const button = buttonApi.create({theme: 'dark'}, handler);
     expect(button).to.have.class('swg-button-dark');
     expect(button).to.not.have.class('swg-button-light');
@@ -128,18 +133,21 @@ describes.realWin('ButtonApi', {}, env => {
   });
 
   it('should create button as light', () => {
+    eventManagerMock.expects('logEvent').withExactArgs(BUTTON_IMPRESSION_EVENT).once();
     const button = buttonApi.create({theme: Theme.LIGHT}, handler);
     expect(button).to.have.class('swg-button-light');
     expect(button).to.not.have.class('swg-button-dark');
   });
 
   it('should create button with lang', () => {
+    eventManagerMock.expects('logEvent').withExactArgs(BUTTON_IMPRESSION_EVENT).once();
     const button = buttonApi.create({lang: 'es'}, handler);
     expect(button.lang).to.equal('es');
     expect(button.getAttribute('title')).to.equal('Suscríbete con Google');
   });
 
   it('should attach button with empty options', () => {
+    eventManagerMock.expects('logEvent').withExactArgs(BUTTON_IMPRESSION_EVENT).once();
     const button = doc.createElement('button');
     button.className = 'button1';
     buttonApi.attach(button, {}, handler);
@@ -154,6 +162,7 @@ describes.realWin('ButtonApi', {}, env => {
   });
 
   it('should attach button with options', () => {
+    eventManagerMock.expects('logEvent').withExactArgs(BUTTON_IMPRESSION_EVENT).once();
     const button = doc.createElement('button');
     button.className = 'button1';
     buttonApi.attach(button, {theme: Theme.DARK}, handler);
@@ -169,6 +178,7 @@ describes.realWin('ButtonApi', {}, env => {
   });
 
   it('should attach button as light', () => {
+    eventManagerMock.expects('logEvent').withExactArgs(BUTTON_IMPRESSION_EVENT).once();
     const button = doc.createElement('button');
     button.className = 'button1';
     buttonApi.attach(button, {theme: Theme.LIGHT}, handler);
@@ -178,6 +188,7 @@ describes.realWin('ButtonApi', {}, env => {
   });
 
   it('should attach button with lang', () => {
+    eventManagerMock.expects('logEvent').withExactArgs(BUTTON_IMPRESSION_EVENT).once();
     const button = doc.createElement('button');
     buttonApi.attach(button, {lang: 'es'}, handler);
     expect(button.lang).to.equal('es');
@@ -185,11 +196,38 @@ describes.realWin('ButtonApi', {}, env => {
   });
 
   it('should pick an existing lang', () => {
+    eventManagerMock.expects('logEvent').withExactArgs(BUTTON_IMPRESSION_EVENT).once();
     const button = doc.createElement('button');
     button.setAttribute('lang', 'fr');
     buttonApi.attach(button, {}, handler);
     expect(button.lang).to.equal('fr');
     expect(button.getAttribute('title')).to.equal('S\'abonner avec Google');
+  });
+
+  it('should log paywall impression when using "attach".', () => {
+    eventManagerMock.expects('logEvent').withExactArgs(BUTTON_IMPRESSION_EVENT).once();
+    eventManagerMock.expects('logEvent').withExactArgs(PAYWALL_IMPRESSION_EVENT).once();
+    const button = doc.createElement('button');
+    buttonApi.attach(button, {}, handler, true);
+  });
+
+  it('should log offers impression when using "attach".', () => {
+    eventManagerMock.expects('logEvent').withExactArgs(BUTTON_IMPRESSION_EVENT).once();
+    eventManagerMock.expects('logEvent').withExactArgs(OFFERS_IMPRESSION_EVENT).once();
+    const button = doc.createElement('button');
+    buttonApi.attach(button, {}, handler, null, true);
+  });
+
+  it('should log paywall impression when using "create".', () => {
+    eventManagerMock.expects('logEvent').withExactArgs(BUTTON_IMPRESSION_EVENT).once();
+    eventManagerMock.expects('logEvent').withExactArgs(PAYWALL_IMPRESSION_EVENT).once();
+    buttonApi.create({}, handler, true);
+  });
+
+  it('should log offers impression when using "create".', () => {
+    eventManagerMock.expects('logEvent').withExactArgs(BUTTON_IMPRESSION_EVENT).once();
+    eventManagerMock.expects('logEvent').withExactArgs(OFFERS_IMPRESSION_EVENT).once();
+    buttonApi.create({}, handler, null, true);
   });
 
   it('should attach a smart button with no options', () => {
@@ -285,5 +323,98 @@ describes.realWin('ButtonApi', {}, env => {
         button.click();
         expect(handler).to.be.calledOnce;
         activitiesMock.verify();
+      });
+
+  it('should attach a smart button with analytics enabled', () => {
+        const button = doc.createElement('button');
+        button.className = 'swg-smart-button';
+        expect(button.nodeType).to.equal(1);
+        const expAnalyticsContext = new AnalyticsContext();
+        expAnalyticsContext.setEmbedderOrigin('google.com');
+        analyticsMock.expects('getContext')
+            .returns(expAnalyticsContext)
+            .once();
+        config.analyticsMode = AnalyticsMode.IMPRESSIONS;
+        runtime.configure(config);
+        activitiesMock.expects('openIframe').withExactArgs(
+            sinon.match(arg => arg.tagName == 'IFRAME'),
+            '$frontend$/swg/_/ui/v1/smartboxiframe?_=_',
+            {
+              _client: 'SwG $internalRuntimeVersion$',
+              publicationId: 'pub1',
+              productId: 'pub1:label1',
+              theme: 'light',
+              lang: 'en',
+              analyticsContext: expAnalyticsContext.toArray(),
+              analyticsEvent: null,
+            })
+            .returns(Promise.resolve(port));
+        buttonApi.attachSmartButton(
+            runtime, button, {}, handler);
+        expect(handler).to.not.be.called;
+        button.click();
+        expect(handler).to.be.calledOnce;
+      });
+
+  it('should attach a smart button with analytics enabled and called from offers page.', () => {
+        const button = doc.createElement('button');
+        button.className = 'swg-smart-button';
+        expect(button.nodeType).to.equal(1);
+        const expAnalyticsContext = new AnalyticsContext();
+        expAnalyticsContext.setEmbedderOrigin('google.com');
+        analyticsMock.expects('getContext')
+            .returns(expAnalyticsContext)
+            .once();
+        config.analyticsMode = AnalyticsMode.IMPRESSIONS;
+        runtime.configure(config);
+        activitiesMock.expects('openIframe').withExactArgs(
+            sinon.match(arg => arg.tagName == 'IFRAME'),
+            '$frontend$/swg/_/ui/v1/smartboxiframe?_=_',
+            {
+              _client: 'SwG $internalRuntimeVersion$',
+              publicationId: 'pub1',
+              productId: 'pub1:label1',
+              theme: 'light',
+              lang: 'en',
+              analyticsContext: expAnalyticsContext.toArray(),
+              analyticsEvent: AnalyticsEvent.IMPRESSION_OFFERS, 
+            })
+            .returns(Promise.resolve(port));
+        buttonApi.attachSmartButton(
+            runtime, button, {}, handler, null, true);
+        expect(handler).to.not.be.called;
+        button.click();
+        expect(handler).to.be.calledOnce;
+      });
+
+  it('should attach a smart button with analytics enabled and called from paywall.', () => {
+        const button = doc.createElement('button');
+        button.className = 'swg-smart-button';
+        expect(button.nodeType).to.equal(1);
+        const expAnalyticsContext = new AnalyticsContext();
+        expAnalyticsContext.setEmbedderOrigin('google.com');
+        analyticsMock.expects('getContext')
+            .returns(expAnalyticsContext)
+            .once();
+        config.analyticsMode = AnalyticsMode.IMPRESSIONS;
+        runtime.configure(config);
+        activitiesMock.expects('openIframe').withExactArgs(
+            sinon.match(arg => arg.tagName == 'IFRAME'),
+            '$frontend$/swg/_/ui/v1/smartboxiframe?_=_',
+            {
+              _client: 'SwG $internalRuntimeVersion$',
+              publicationId: 'pub1',
+              productId: 'pub1:label1',
+              theme: 'light',
+              lang: 'en',
+              analyticsContext: expAnalyticsContext.toArray(),
+              analyticsEvent: AnalyticsEvent.IMPRESSION_PAYWALL, 
+            })
+            .returns(Promise.resolve(port));
+        buttonApi.attachSmartButton(
+            runtime, button, {}, handler, true);
+        expect(handler).to.not.be.called;
+        button.click();
+        expect(handler).to.be.calledOnce;
       });
 });

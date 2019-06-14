@@ -51,6 +51,30 @@ const TITLE_LANG_MAP = {
   'zh-tw': '透過 Google 訂閱',
 };
 
+/** @type {!../api/client-event-manager-api.ClientEvent} */
+export const BUTTON_IMPRESSION_EVENT = {
+  eventType: AnalyticsEvent.IMPRESSION_SUBSCRIBE_BUTTON,
+  eventOriginator: EventOriginator.SWG_CLIENT,
+  isFromUserAction: false,
+  additionalParameters: null,
+};
+
+/** @type {!../api/client-event-manager-api.ClientEvent} */
+export const PAYWALL_IMPRESSION_EVENT = {
+  eventType: AnalyticsEvent.IMPRESSION_PAYWALL,
+  eventOriginator: EventOriginator.SWG_CLIENT,
+  isFromUserAction: false,
+  additionalParameters: null,
+};
+
+/** @type {!../api/client-event-manager-api.ClientEvent} */
+export const OFFERS_IMPRESSION_EVENT = {
+  eventType: AnalyticsEvent.IMPRESSION_OFFERS,
+  eventOriginator: EventOriginator.SWG_CLIENT,
+  isFromUserAction: false,
+  additionalParameters: null,
+};
+
 
 /**
  * The button stylesheet can be found in the `/assets/swg-button.css`.
@@ -102,7 +126,7 @@ export class ButtonApi {
    */
   create(optionsOrCallback, opt_callback, opt_on_paywall, opt_on_subscriptions_page) {
     const button = createElement(this.doc_.getWin().document, 'button', {});
-    return this.attach(button, optionsOrCallback, opt_callback, opt_on_paywall, opt_on_subscriptions_page, true);
+    return this.attach(button, optionsOrCallback, opt_callback, opt_on_paywall, opt_on_subscriptions_page);
   }
 
   /**
@@ -111,10 +135,9 @@ export class ButtonApi {
    * @param {function()=} opt_callback
    * @param {?boolean} opt_on_paywall
    * @param {?boolean} opt_on_subscriptions_page
-   * @param {?boolean} opt_is_swg_button
    * @return {!Element}
    */
-  attach(button, optionsOrCallback, opt_callback, opt_on_paywall, opt_on_subscriptions_page, opt_is_swg_button) {
+  attach(button, optionsOrCallback, opt_callback, opt_on_paywall, opt_on_subscriptions_page) {
     const options = this.getOptions_(optionsOrCallback);
     const callback = this.getCallback_(optionsOrCallback, opt_callback);
 
@@ -126,13 +149,12 @@ export class ButtonApi {
     }
     button.setAttribute('title', msg(TITLE_LANG_MAP, button) || '');
     button.addEventListener('click', callback);
-    const impression_log_event = {
-      eventType: AnalyticsEvent.IMPRESSION_SUBSCRIBE_BUTTON,
-      eventOriginator: EventOriginator.SWG_CLIENT,
-      isFromUserAction: false,
-      additionalParameters: null,
-    };
-    this.eventManager_.logEvent(impression_log_event);
+    this.eventManager_.logEvent(BUTTON_IMPRESSION_EVENT);
+    if (opt_on_paywall != null && opt_on_paywall) {
+      this.eventManager_.logEvent(PAYWALL_IMPRESSION_EVENT);
+    } else if (opt_on_subscriptions_page != null && opt_on_subscriptions_page) {
+      this.eventManager_.logEvent(OFFERS_IMPRESSION_EVENT);
+    }
     return button;
   }
 
@@ -186,6 +208,6 @@ export class ButtonApi {
     button.classList.add('swg-smart-button');
 
     return new SmartSubscriptionButtonApi(
-        deps, button, options, callback).start();
+        deps, button, options, callback).start(opt_on_paywall, opt_on_subscriptions_page);
   }
 }
