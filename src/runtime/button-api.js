@@ -96,20 +96,25 @@ export class ButtonApi {
   /**
    * @param {!../api/subscriptions.ButtonOptions|function()} optionsOrCallback
    * @param {function()=} opt_callback
+   * @param {?boolean} opt_on_paywall
+   * @param {?boolean} opt_on_subscriptions_page
    * @return {!Element}
    */
-  create(optionsOrCallback, opt_callback) {
+  create(optionsOrCallback, opt_callback, opt_on_paywall, opt_on_subscriptions_page) {
     const button = createElement(this.doc_.getWin().document, 'button', {});
-    return this.attach(button, optionsOrCallback, opt_callback);
+    return this.attach(button, optionsOrCallback, opt_callback, opt_on_paywall, opt_on_subscriptions_page, true);
   }
 
   /**
    * @param {!Element} button
    * @param {../api/subscriptions.ButtonOptions|function()} optionsOrCallback
    * @param {function()=} opt_callback
+   * @param {?boolean} opt_on_paywall
+   * @param {?boolean} opt_on_subscriptions_page
+   * @param {?boolean} opt_is_swg_button
    * @return {!Element}
    */
-  attach(button, optionsOrCallback, opt_callback) {
+  attach(button, optionsOrCallback, opt_callback, opt_on_paywall, opt_on_subscriptions_page, opt_is_swg_button) {
     const options = this.getOptions_(optionsOrCallback);
     const callback = this.getCallback_(optionsOrCallback, opt_callback);
 
@@ -168,9 +173,11 @@ export class ButtonApi {
    * @param {!Element} button
    * @param {../api/subscriptions.ButtonOptions|function()} optionsOrCallback
    * @param {function()=} opt_callback
+   * @param {?boolean} opt_on_paywall
+   * @param {?boolean} opt_on_subscriptions_page
    * @return {!Element}
    */
-  attachSmartButton(deps, button, optionsOrCallback, opt_callback) {
+  attachSmartButton(deps, button, optionsOrCallback, opt_callback, opt_on_paywall, opt_on_subscriptions_page) {
     const options = this.getOptions_(optionsOrCallback);
     const callback = /** @type {function()} */
         (this.getCallback_(optionsOrCallback, opt_callback));
