@@ -903,7 +903,10 @@ function createPublicRuntime(runtime) {
     attachSmartButton: runtime.attachSmartButton.bind(runtime),
     getPropensityModule: runtime
         .getPropensityModule.bind(runtime),
+<<<<<<< HEAD
     eventManager: runtime.eventManager.bind(runtime),
+=======
+>>>>>>> master
   });
 }
 
